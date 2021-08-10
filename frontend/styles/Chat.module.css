@@ -1,0 +1,40 @@
+.root{
+    margin: 32px;
+    display: flex;
+}
+
+.title{
+    margin: 16px;
+    display: inline;
+    float: left;
+}
+
+.notification{
+    max-width: 25%;
+    max-height: 750px;
+    overflow-y: auto;
+}
+
+.chat{
+    margin: 16px;
+    display: inline-block;
+    height: 550px;
+    width: 100%;
+    overflow-y: auto;
+    margin-top: 0;
+}
+
+.box{
+    display: inline;
+    height: 750px;
+    max-width: 75%;
+    width: 75%;
+}
+
+.messages{
+    margin: 16px;
+    margin-top: 0;
+    display: inline-block;
+    height: 150px;
+    width: 100%;
+}
