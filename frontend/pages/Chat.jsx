@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
+import { v4 as uuidv4 } from 'uuid';
 import { io } from "socket.io-client";
 import Alert from '@material-ui/lab/Alert';
 import List from '@material-ui/core/List';
@@ -19,6 +20,11 @@ const socket = io(`http://localhost:8000`, { transports: ['websocket'] });
 export default function Chat() {
 
     const [username, setUsername] = useState('');
+    const [mensajes, setMensajes] = useState([]);
+
+    const { register, handleSubmit, formState: { errors } } = useForm({
+        resolver: yupResolver(schema)
+    });
 
     const checkSession = () => {
         if (!sessionStorage.getItem("username")) {
@@ -35,7 +41,18 @@ export default function Chat() {
         checkSession();
 
     }
-    
+
+    const sendMessage = (data) => {
+        const msg = data.message;
+        let date = new Date();
+        let time = `${date.getHours()} : ${date.getMinutes()}`
+        socket.emit("send-message", { msg, username, time });
+    }
+
+    socket.on('recive-msg', (msg) => {
+        setMensajes([...mensajes, msg]);
+    });
+
     useEffect(() => {
         checkSession();
     });
@@ -60,36 +77,43 @@ export default function Chat() {
                 <div className={styles.box}>
                     <div className={styles.chat}>
                         <List>
-                            <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                    <AccountCircleIcon style={{ fontSize: 50 }} color="primary" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Username"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                component="span"
-                                                variant="body2"
-                                                color="textPrimary"
-                                            >
-                                                {'12/12/12'}
-                                            </Typography>
-                                            {" — I'll be in your neighborhood doing errands this…"}
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
+                            {
+                                mensajes.map((m) => {
+                                    return <ListItem key={uuidv4()} alignItems="flex-start">
+                                    <ListItemAvatar>
+                                        <AccountCircleIcon style={{ fontSize: 50 }} color="primary" />
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={m.username}
+                                        secondary={
+                                            <React.Fragment>
+                                                <Typography
+                                                    component="span"
+                                                    variant="body2"
+                                                    color="textPrimary"
+                                                >
+                                                    {m.time}
+                                                </Typography>
+                                                 --- {m.msg}
+                                            </React.Fragment>
+                                        }
+                                    />
+                                </ListItem> 
+                                })
+                            }
                             <Divider variant="inset" component="li" />
                         </List>
                     </div>
                     <div className={styles.messages} >
                         <h3>{username}</h3>
-                        <div className="form-floating">
-                            <textarea style={{ height: '120px' }} className="form-control"></textarea>
-                            <label>Message</label>
-                        </div>
-                        <button type="button" className="btn btn-success m-2">Send message</button>
+                        <form onSubmit={handleSubmit(sendMessage)}>
+                            <div className="form-floating">
+                                <textarea {...register("message")} style={{ height: '120px' }} className="form-control"></textarea>
+                                <label>Message</label>
+                            </div>
+                            <p className={styles.errors}>{errors.messages?.message}</p>
+                            <button type="submit" className="btn btn-success m-2">Send message</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -97,3 +121,7 @@ export default function Chat() {
         </div>
     )
 }
+
+const schema = yup.object().shape({
+    messages: yup.string(),
+});

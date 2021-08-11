@@ -38,3 +38,7 @@
     height: 150px;
     width: 100%;
 }
+
+.errors{
+    color: red;
+}
